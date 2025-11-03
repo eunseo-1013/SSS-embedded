@@ -7,19 +7,21 @@ LedControl lc[4] = {
     LedControl(8, 13, 9, 1)
 };
 
-const int analog_cnt = 8;
-const int change = 30; 
-const int change_div = 2; 
+
+//전역 변수
+const int analog_cnt = 8; // 조도 센서 개수
+const int change = 50;  // 변화량 1
+const int change_div = 2; //변화량 배수 기준
 const int ldrPin[analog_cnt] = {A0, A1, A2, A3, A4, A5, A6, A7};
 int init_value[analog_cnt];
 int ldrValue[analog_cnt];
-const int ANIMATION_SPEED = 500;
+const int SPEED = 500; // 디스플레이 delay 간격
 
-// 🔸 버튼 핀 설정
-const int buttonPin = 10;
+
+const int buttonPin = 10; 
 bool lastButtonState = HIGH;
 
-const uint8_t IMAGES[8] = {
+const uint8_t IMAGES[8] = { // 초기 원
   0b00000000,
   0b00000000,
   0b00000000,
@@ -30,7 +32,7 @@ const uint8_t IMAGES[8] = {
   0b00011111
 };
 
-const uint8_t IMAGES_up_2[8] = {
+const uint8_t IMAGES_up_2[8] = { // chnage * change_div 이상 변했을 때
   0b00000001,
   0b00000001,
   0b00000011,
@@ -41,7 +43,7 @@ const uint8_t IMAGES_up_2[8] = {
   0b00011111
 };
 
-const uint8_t IMAGES_up_1[8] = {
+const uint8_t IMAGES_up_1[8] = { // change 양 이상 변했을 때 (짝수)
   0b00000000,
   0b00000001,
   0b00000011,
@@ -52,7 +54,7 @@ const uint8_t IMAGES_up_1[8] = {
   0b00011111
 };
 
-const uint8_t IMAGES_side_1[8] = {
+const uint8_t IMAGES_side_1[8] = { // change 양 이상 변했을 때 (홀수)
   0b00000000,
   0b00000000,
   0b00010100,
@@ -63,7 +65,7 @@ const uint8_t IMAGES_side_1[8] = {
   0b00011111
 };
 
-const uint8_t IMAGES_side_2[8] = {
+const uint8_t IMAGES_side_2[8] = {// chnage * change_div 이상 변했을 때(홀수)
   0b00000000,
   0b00100000,
   0b00010100,
@@ -74,7 +76,8 @@ const uint8_t IMAGES_side_2[8] = {
   0b00011111
 };
 
-void drawImage_0(int i, const uint8_t image[8]) {
+
+void drawImage(int i, const uint8_t image[8]) {
   for (int row = 0; row < 8; row++) {
     for (int col = 0; col < 8; col++) {
       bool pixelOn = bitRead(image[row], 7 - col);
@@ -83,7 +86,7 @@ void drawImage_0(int i, const uint8_t image[8]) {
   }
 }
 
-void drawImage_180(int i, const uint8_t image[8]) {
+void drawImage_R(int i, const uint8_t image[8]) {
   for (int row = 0; row < 8; row++) {
     for (int col = 0; col < 8; col++) {
       bool pixelOn = bitRead(image[row], col);
@@ -92,7 +95,7 @@ void drawImage_180(int i, const uint8_t image[8]) {
   }
 }
 
-void drawImage_270_0(int i, const uint8_t image[8]) {
+void drawImage_T(int i, const uint8_t image[8]) {
   for (int row = 0; row < 8; row++) {
     for (int col = 0; col < 8; col++) {
       bool pixelOn = bitRead(image[row], 7 - col);
@@ -101,7 +104,7 @@ void drawImage_270_0(int i, const uint8_t image[8]) {
   }
 }
 
-void drawImage_270_180(int i, const uint8_t image[8]) {
+void drawImage_RT(int i, const uint8_t image[8]) {
   for (int row = 0; row < 8; row++) {
     for (int col = 0; col < 8; col++) {
       bool pixelOn = bitRead(image[row], col);
@@ -110,7 +113,7 @@ void drawImage_270_180(int i, const uint8_t image[8]) {
   }
 }
 
-int find_change_index(int dif[]) {
+int find_change_index(int dif[]) { // 최대 변화량을 가진 조도 센서 찾기
   int max = 0;
   int max_index = 0;
   for (int i = 0; i < analog_cnt; i++) {
@@ -122,12 +125,12 @@ int find_change_index(int dif[]) {
   return max_index;
 }
 
-int find_change_value(int dif[]) {
+int find_change_value(int dif[]) { // 최대 변화량 / change <- 변화 기준에서 몇배 인가? 
   int change_value = dif[find_change_index(dif)] / change;
   return change_value;
 }
 
-// 🔸 버튼 눌러 센서 초기화하는 함수
+//  버튼 눌러 센서 초기화하는 함수
 void recalibrateSensors() {
   for (int blink = 0; blink < 3; blink++) {
      for (int i = 0; i < 4; i++) {
@@ -137,10 +140,10 @@ void recalibrateSensors() {
     }
     delay(200);
 
-    drawImage_0(0, IMAGES);
-    drawImage_0(2, IMAGES);
-    drawImage_180(1, IMAGES);
-    drawImage_180(3, IMAGES);
+    drawImage(0, IMAGES);
+    drawImage(2, IMAGES);
+    drawImage_R(1, IMAGES);
+    drawImage_R(3, IMAGES);
     delay(200);
   }
 
@@ -174,10 +177,10 @@ void loop() {
   lastButtonState = buttonState;
 
   // 기본 이미지
-  drawImage_0(0, IMAGES);
-  drawImage_0(2, IMAGES);
-  drawImage_180(1, IMAGES);
-  drawImage_180(3, IMAGES);
+  drawImage(0, IMAGES);
+  drawImage(2, IMAGES);
+  drawImage_R(1, IMAGES);
+  drawImage_R(3, IMAGES);
 
   int dif[analog_cnt];
   for (int i = 0; i < analog_cnt; i++) {
@@ -187,77 +190,77 @@ void loop() {
     Serial.println(dif[i]);
   }
 
-  int index = find_change_index(dif);
+  int index = find_change_index(dif); 
   int value = find_change_value(dif);
 
-  if (value >= change_div) {
-    switch (index) {
+  if (value >= change_div) { 
+    switch (index) { // 조도 센서 번호에 맞는 디스플레이 출력 
       case 0:
-        drawImage_180(3, IMAGES_up_2);
-        drawImage_0(0, IMAGES_up_2);
+        drawImage_R(3, IMAGES_up_2);
+        drawImage(0, IMAGES_up_2);
         break;
       case 1:
-        drawImage_0(0, IMAGES_side_2);
+        drawImage(0, IMAGES_side_2);
         break;
       case 2:
-        drawImage_270_180(1, IMAGES_up_2);
-        drawImage_270_0(0, IMAGES_up_2);
+        drawImage_RT(1, IMAGES_up_2);
+        drawImage_T(0, IMAGES_up_2);
         break;
       case 3:
-        drawImage_180(1, IMAGES_side_2);
+        drawImage_R(1, IMAGES_side_2);
         break;
       case 4:
-        drawImage_180(1, IMAGES_up_2);
-        drawImage_0(2, IMAGES_up_2);
+        drawImage_R(1, IMAGES_up_2);
+        drawImage(2, IMAGES_up_2);
         break;
       case 5:
-        drawImage_0(2, IMAGES_side_2);
+        drawImage(2, IMAGES_side_2);
         break;
       case 6:
-        drawImage_270_180(3, IMAGES_up_2);
-        drawImage_270_0(2, IMAGES_up_2);
+        drawImage_RT(3, IMAGES_up_2);
+        drawImage_T(2, IMAGES_up_2);
         break;
       case 7:
-        drawImage_180(3, IMAGES_side_2);
+        drawImage_R(3, IMAGES_side_2);
         break;
     }
   } else if (value >= change_div - 1) {
     switch (index) {
       case 0:
-        drawImage_180(3, IMAGES_up_1);
-        drawImage_0(0, IMAGES_up_1);
+        drawImage_R(3, IMAGES_up_1);
+        drawImage(0, IMAGES_up_1);
         break;
       case 1:
-        drawImage_0(0, IMAGES_side_1);
+        drawImage(0, IMAGES_side_1);
         break;
       case 2:
-        drawImage_270_180(1, IMAGES_up_1);
-        drawImage_270_0(0, IMAGES_up_1);
+        drawImage_RT(1, IMAGES_up_1);
+        drawImage_T(0, IMAGES_up_1);
         break;
       case 3:
-        drawImage_180(1, IMAGES_side_1);
+        drawImage_R(1, IMAGES_side_1);
         break;
       case 4:
-        drawImage_180(1, IMAGES_up_1);
-        drawImage_0(2, IMAGES_up_1);
+        drawImage_R(1, IMAGES_up_1);
+        drawImage(2, IMAGES_up_1);
         break;
       case 5:
-        drawImage_0(2, IMAGES_side_1);
+        drawImage(2, IMAGES_side_1);
         break;
       case 6:
-        drawImage_270_180(3, IMAGES_up_1);
-        drawImage_270_0(2, IMAGES_up_1);
+        drawImage_RT(3, IMAGES_up_1);
+        drawImage_T(2, IMAGES_up_1);
         break;
       case 7:
-        drawImage_180(3, IMAGES_side_1);
+        drawImage_R(3, IMAGES_side_1);
         break;
     }
   } else {
-    drawImage_0(0, IMAGES);
-    drawImage_0(2, IMAGES);
-    drawImage_180(1, IMAGES);
-    drawImage_180(3, IMAGES);
+    drawImage(0, IMAGES);
+    drawImage(2, IMAGES);
+    drawImage_R(1, IMAGES);
+    drawImage_R(3, IMAGES);
   }
 
-  delay(ANIMATION_SPEED);
+  delay(SPEED);
 }
